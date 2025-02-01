@@ -1,6 +1,22 @@
 const express = require("express");
+const morgan = require("morgan");
+
 const app = express();
 app.use(express.json());
+//app.use(morgan('tiny'));
+//app.use(morgan(':method :url :status :res[content-length] - :response-time ms'));
+const requestLogger = (tokens, req, res) => {
+  return [
+    tokens.method(req, res),
+    tokens.url(req, res),
+    tokens.status(req, res),
+    tokens.res(req, res, 'content-length'), '-',
+    tokens['response-time'](req, res), 'ms',
+    JSON.stringify(req.body)
+  ].join(' ')
+}
+
+app.use(morgan(requestLogger));
 
 let persons = require("./data.js");
 
@@ -41,12 +57,9 @@ const generateId = () => {
 app.post("/api/persons", (req, res) => {
   const body = req.body;
 
-  console.log(body);
-  
-
   if (!(body && body.name && body.number))
     return res.status(400).json({ error: "Falta datos..." });
-  if (persons.some(p => p.name === body.name))
+  if (persons.some((p) => p.name === body.name))
     return res.status(400).json({ error: "Nombre ya registrado" });
 
   const person = {
@@ -54,11 +67,7 @@ app.post("/api/persons", (req, res) => {
     name: body.name,
     number: body.number,
   };
-
-  console.log(person);
   persons = persons.concat(person);
-
-  console.log(persons);
 
   res.json(person);
 });
