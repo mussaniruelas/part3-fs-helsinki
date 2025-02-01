@@ -1,0 +1,19 @@
+### Get info about a person
+http://localhost:3001/
+
+### Get all persons
+GET http://localhost:3001/api/persons
+
+
+### Post a new person
+POST http://localhost:3001/api/persons
+Content-Type: application/json
+{
+  "name": "John Doe",
+  "age": 30
+}
+
+
+### Delete a person
+DELETE http://localhost:3001/api/persons/2
+
