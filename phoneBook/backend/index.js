@@ -1,8 +1,15 @@
 const express = require("express");
 const morgan = require("morgan");
-
+const cors = require("cors");
 const app = express();
+
+let persons = require("./data.js");
+
+app.use(express.static("dist"));
+app.use(cors());
 app.use(express.json());
+
+// *********************************** MORGAN *************************************
 //app.use(morgan('tiny'));
 //app.use(morgan(':method :url :status :res[content-length] - :response-time ms'));
 const requestLogger = (tokens, req, res) => {
@@ -10,15 +17,24 @@ const requestLogger = (tokens, req, res) => {
     tokens.method(req, res),
     tokens.url(req, res),
     tokens.status(req, res),
-    tokens.res(req, res, 'content-length'), '-',
-    tokens['response-time'](req, res), 'ms',
-    JSON.stringify(req.body)
-  ].join(' ')
-}
+    tokens.res(req, res, "content-length"),
+    "-",
+    tokens["response-time"](req, res),
+    "ms",
+    JSON.stringify(req.body),
+  ].join(" ");
+};
 
 app.use(morgan(requestLogger));
 
-let persons = require("./data.js");
+// Esto es para los enpoints desconocidos
+const unknownEndpoint = (request, response) => {
+  response.status(404).send({ error: "unknown endpoint" });
+};
+
+// ------------------------------------------------------------------
+// ------------------------ Inicio api ----------------------------
+// ------------------------------------------------------------------
 
 app.get("/", (req, res) => {
   res.send("<h1>Hello World!</h1>");
@@ -54,6 +70,7 @@ app.delete("/api/persons/:id", (req, res) => {
 const generateId = () => {
   return Math.floor(Math.random() * 1000);
 };
+
 app.post("/api/persons", (req, res) => {
   const body = req.body;
 
@@ -74,7 +91,9 @@ app.post("/api/persons", (req, res) => {
 
 // -------------- Inicio --------------
 
-const PORT = 3001;
+app.use(unknownEndpoint);
+
+const PORT = process.env.PORT || 3001;
 app.listen(PORT, () => {
   console.log(`Server running on port http://localhost:${PORT}`);
 });
