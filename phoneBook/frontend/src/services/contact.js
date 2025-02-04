@@ -6,11 +6,15 @@ const getAll = () => {
   return axios.get(baseUrl).then((response) => response.data);
 };
 
+const getId = (id) => {
+  return axios.get(`${baseUrl}/${id}`).then((response) => response.data);
+};
+
 const create = (newPerson) => {
   return axios.post(baseUrl, newPerson).then((response) => response.data);
 };
 
-const update = (id, newPerson) => {
+const updateId = (id, newPerson) => {
   console.log(id, newPerson);
 
   return axios
@@ -22,4 +26,4 @@ const deleteId = (id) => {
   return axios.delete(`${baseUrl}/${id}`);
 };
 
-export { getAll, create, update, deleteId };
+export { getAll, getId, create, updateId, deleteId };

@@ -1,27 +1,31 @@
 import React from "react";
 import Contact from "./Contact";
-import { deleteId } from "../services/contact";
+import { deleteId, getAll } from "../services/contact";
 
 const Contacts = ({ persons, setPersons, setMessage, setErrorMessage }) => {
-  const deletePerson = (id) => {
-    const personAux = persons.find((person) => person.id === id);
-    if (window.confirm("Are you sure you want to delete this contact?")) {
-      deleteId(id)
-        .then(() => {
-          setPersons(persons.filter((person) => person.id !== id));
-          setMessage(`Delete ${personAux.name}`);
-          setTimeout(() => {
-            setMessage(null);
-          }, 5000);
-        })
-        .catch((error) => {
-          setErrorMessage(`Information of ${personAux.name} has already been removed from server`);
-          setTimeout(() => {
-            setErrorMessage(null);
-          }, 5000);
-          setPersons(persons.filter((person) => person.id !== id));
-        });
-    }
+  const deletePerson = (name, id) => {
+    const confirmacion = window.confirm(
+      "Are you sure you want to delete this contact?"
+    );
+
+    if (!confirmacion) return null;
+
+    deleteId(id)
+      .then(() => {
+        setMessage(`Delete ${name}`);
+      })
+      .catch((error) => {
+        setErrorMessage(
+          `Information of ${name} has already been removed from server`
+        );
+      });
+
+    setTimeout(() => {
+      setMessage(null);
+    }, 5000);
+    getAll()
+      .then((data) => setPersons(data))
+      .catch((error) => setMessage(error.message));
   };
 
   return (
@@ -40,7 +44,7 @@ const Contacts = ({ persons, setPersons, setMessage, setErrorMessage }) => {
             <Contact
               key={person.id}
               person={person}
-              deletePerson={() => deletePerson(person.id)}
+              deletePerson={() => deletePerson(person.name, person.id)}
             />
           ))}
         </tbody>

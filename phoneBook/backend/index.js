@@ -6,12 +6,6 @@ const cors = require("cors");
 const Person = require("./models/person.js");
 const app = express();
 
-let persons = require("./data.js");
-
-app.use(express.static("dist"));
-app.use(cors());
-app.use(express.json());
-
 // *********************************** MORGAN *************************************
 //app.use(morgan('tiny'));
 //app.use(morgan(':method :url :status :res[content-length] - :response-time ms'));
@@ -28,12 +22,30 @@ const requestLogger = (tokens, req, res) => {
   ].join(" ");
 };
 
-app.use(morgan(requestLogger));
+// Menjador de esrrores
+const handleError = (error, req, res, next) => {
+  console.error(error.message);
 
-// Esto es para los enpoints desconocidos
-const unknownEndpoint = (request, response) => {
-  response.status(404).send({ error: "unknown endpoint" });
+  if (error.name === "CastError") {
+    return response.status(400).send({ error: "malformatted id" });
+  }
+
+  next(error);
 };
+
+// Manejador de endpoints enpoints desconocidos
+const unknownEndpoint = (req, res) => {
+  res.status(404).send({ error: "unknown endpoint" });
+};
+
+// ------------------------------------------------------------------
+// ------------------------ Middleware ----------------------------
+// ------------------------------------------------------------------
+
+app.use(express.static("dist"));
+app.use(express.json());
+app.use(cors());
+app.use(morgan(requestLogger));
 
 // ------------------------------------------------------------------
 // ------------------------ Inicio api ----------------------------
@@ -44,7 +56,7 @@ app.get("/", (req, res) => {
 });
 
 app.get("/info", (req, res) => {
-  res.send(`<p>Phonebook has info for ${persons.length} people</p>
+  res.send(`<p>Phonebook has info for people</p>
     <p>${new Date()}</p>`);
 });
 
@@ -74,25 +86,43 @@ app.post("/api/persons", (req, res) => {
   });
 });
 
-app.get("/api/persons/:id", (req, res) => {
+app.get("/api/persons/:id", (req, res, next) => {
   const id = req.params.id;
   console.log(id);
-  Person.findById(id).then((person) => {
-    res.json(person);
-  });
+  Person.findById(id)
+    .then((person) => {
+      res.json(person);
+    })
+    .catch((error) => next(error));
 });
 
-app.delete("/api/persons/:id", (req, res) => {
-  const id = Number(req.params.id);
-  persons = persons.filter((p) => p.id !== id);
-  console.log(id, persons);
+app.delete("/api/persons/:id", (req, res, next) => {
+  Person.findByIdAndDelete(req.params.id)
+    .then((result) => {
+      res.status(204).json(result);
+    })
+    .catch((error) => next(error));
+});
 
-  res.status(204).end();
+app.put("/api/persons/:id", (req, res, next) => {
+  const body = req.body;
+
+  const person = {
+    name: body.name,
+    number: body.number,
+  };
+
+  Person.findByIdAndUpdate(req.params.id, person, { new: true })
+    .then((updatePerson) => {
+      res.json(updatePerson);
+    })
+    .catch((error) => next(error));
 });
 
 // -------------- Inicio --------------
 
 app.use(unknownEndpoint);
+app.use(handleError);
 
 const PORT = process.env.PORT || 3001;
 app.listen(PORT, () => {

@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { create, update } from "../services/contact";
+import { create, getAll, updateId, getId } from "../services/contact";
 
 function Form({ persons, setPersons, setMessage, setErrorMessage }) {
   const [newPerson, setNewPerson] = useState({ name: "", number: "" });
@@ -9,42 +9,59 @@ function Form({ persons, setPersons, setMessage, setErrorMessage }) {
     setNewPerson({ ...newPerson, [name]: value });
   };
 
-  const handleUpdatePerson = (personObject) => {
-    const id = personObject.id;
-    const changedPerson = { ...personObject, number: newPerson.number };
-    update(id, changedPerson)
+  const handleUpdateList = () => {
+    getAll()
       .then((data) => {
-        setPersons(persons.map((person) => (person.id !== id ? person : data)));
-        setMessage(`Update ${personObject.name}`);
-        setTimeout(() => {
-          setMessage(null);
-        }, 5000);
+        setPersons(data);
+        setMessage(`Se actualizo la lista`);
       })
       .catch((error) => {
-        setErrorMessage(`Information of ${personObject.name} has already been removed from server`);
-        setTimeout(() => {
-          setErrorMessage(null);
-        }, 5000);
-        setPersons(persons.filter((person) => person.id !== personObject.id));
+        setErrorMessage(error);
       });
+    setTimeout(() => {
+      setErrorMessage(null);
+      setMessage(null);
+    }, 5000);
+  };
+
+  const handleUpdatePerson = (personUpdate) => {
+    const id = personUpdate.id;
+    updateId(id, personUpdate)
+      .then((data) => {
+        setMessage(`Update ${data.name}`);
+      })
+      .catch((error) => {
+        setErrorMessage(
+          `Information of ${personUpdate.name} has already been removed from server ${error}`
+        );
+      });
+    console.log("holaa");
+    
+    setTimeout(() => {
+      setErrorMessage(null);
+      setMessage(null);
+    }, 5000);
+
+    handleUpdateList();
   };
 
   const handleCreatePerson = (newPerson) => {
-    const newPersons = persons.concat(newPerson);
     create(newPerson)
       .then((data) => {
-        setPersons(newPersons);
-        setMessage(`Update ${newPerson.name}`);
-        setTimeout(() => {
-          setMessage(null);
-        }, 5000);
+        setMessage(`Update ${data.name}`);
       })
       .catch((error) => {
-        setErrorMessage(`Information of ${newPerson.name} has already been removed from server`);
-        setTimeout(() => {
-          setErrorMessage(null);
-        }, 5000);
+        setErrorMessage(
+          `Information of ${newPerson.name} has already been removed from server`
+        );
       });
+
+    setTimeout(() => {
+      setErrorMessage(null);
+      setMessage(null);
+    }, 5000);
+
+    handleUpdateList();
   };
 
   const addPerson = (event) => {
@@ -52,14 +69,14 @@ function Form({ persons, setPersons, setMessage, setErrorMessage }) {
     const personAux = { ...newPerson };
     setNewPerson({ name: "", number: "" });
 
-    const personObject = persons.find((p) => p.name === personAux.name);
+    const personUpdate = persons.find((p) => p.name === personAux.name);
 
-    if (personObject) {
+    if (personUpdate) {
       const confirmation = window.confirm(
-        `${personAux.name} is already added to phonebook, replace the old number with a new one?`
+        `${personUpdate.name} is already added to phonebook, replace the old number with a new one?`
       );
-      if (confirmation) handleUpdatePerson(personObject);
-      else return;
+      if (!confirmation) return;
+      handleUpdatePerson({...personUpdate, number: personAux.number});
     } else {
       handleCreatePerson(personAux);
     }

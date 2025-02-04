@@ -1,19 +1,23 @@
 import { useState } from "react";
+import { getAll } from "../services/contact";
 
-function Filter({persons, setPersons}) {
+function Filter({ persons, setPersons }) {
   const [filterName, setFilterName] = useState("");
 
   const handleFilter = (e) => {
     const newName = e.target.value;
     setFilterName(newName);
-    const show = newName
-      ? persons.filter((person) =>
-          person.name.toLowerCase().includes(newName.toLowerCase())
-        )
-      : persons;
-    
-    setPersons(show);
 
+    if (newName) {
+      const show = persons.filter((p) =>
+        p.name.toLowerCase().includes(newName.toLowerCase())
+      );
+      setPersons(show);
+    } else {
+      getAll()
+        .then((date) => setPersons(date))
+        .catch((error) => console.log(error));
+    }
   };
 
   return (
