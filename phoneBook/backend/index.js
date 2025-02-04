@@ -1,9 +1,9 @@
-require("dotenv").config();
-const express = require("express");
-const morgan = require("morgan");
-const cors = require("cors");
+require('dotenv').config();
+const express = require('express');
+const morgan = require('morgan');
+const cors = require('cors');
 
-const Person = require("./models/person.js");
+const Person = require('./models/person.js');
 const app = express();
 
 // *********************************** MORGAN *************************************
@@ -14,20 +14,20 @@ const requestLogger = (tokens, req, res) => {
     tokens.method(req, res),
     tokens.url(req, res),
     tokens.status(req, res),
-    tokens.res(req, res, "content-length"),
-    "-",
-    tokens["response-time"](req, res),
-    "ms",
+    tokens.res(req, res, 'content-length'),
+    '-',
+    tokens['response-time'](req, res),
+    'ms',
     JSON.stringify(req.body),
-  ].join(" ");
+  ].join(' ');
 };
 
 // Menjador de esrrores
 const handleError = (error, req, res, next) => {
   console.error(error.message);
 
-  if (error.name === "CastError") {
-    return response.status(400).send({ error: "malformatted id" });
+  if (error.name === 'CastError') {
+    return res.status(400).send({ error: 'malformatted id' });
   }
 
   next(error);
@@ -35,14 +35,14 @@ const handleError = (error, req, res, next) => {
 
 // Manejador de endpoints enpoints desconocidos
 const unknownEndpoint = (req, res) => {
-  res.status(404).send({ error: "unknown endpoint" });
+  res.status(404).send({ error: 'unknown endpoint' });
 };
 
 // ------------------------------------------------------------------
 // ------------------------ Middleware ----------------------------
 // ------------------------------------------------------------------
 
-app.use(express.static("dist"));
+app.use(express.static('dist'));
 app.use(express.json());
 app.use(cors());
 app.use(morgan(requestLogger));
@@ -51,11 +51,11 @@ app.use(morgan(requestLogger));
 // ------------------------ Inicio api ----------------------------
 // ------------------------------------------------------------------
 
-app.get("/", (req, res) => {
-  res.send("<h1>Hello World!</h1>");
+app.get('/', (req, res) => {
+  res.send('<h1>Hello World!</h1>');
 });
 
-app.get("/info", (req, res) => {
+app.get('/info', (req, res) => {
   res.send(`<p>Phonebook has info for people</p>
     <p>${new Date()}</p>`);
 });
@@ -64,17 +64,17 @@ app.get("/info", (req, res) => {
 // ------------------------ CRUD persons ----------------------------
 // ------------------------------------------------------------------
 
-app.get("/api/persons", (req, res) => {
+app.get('/api/persons', (req, res) => {
   Person.find({}).then((person) => {
     res.json(person);
   });
 });
 
-app.post("/api/persons", (req, res) => {
+app.post('/api/persons', (req, res) => {
   const body = req.body;
 
   if (!(body && body.name && body.number))
-    return res.status(400).json({ error: "Falta datos..." });
+    return res.status(400).json({ error: 'Falta datos...' });
 
   const person = new Person({
     name: body.name,
@@ -86,7 +86,7 @@ app.post("/api/persons", (req, res) => {
   });
 });
 
-app.get("/api/persons/:id", (req, res, next) => {
+app.get('/api/persons/:id', (req, res, next) => {
   const id = req.params.id;
   console.log(id);
   Person.findById(id)
@@ -96,7 +96,7 @@ app.get("/api/persons/:id", (req, res, next) => {
     .catch((error) => next(error));
 });
 
-app.delete("/api/persons/:id", (req, res, next) => {
+app.delete('/api/persons/:id', (req, res, next) => {
   Person.findByIdAndDelete(req.params.id)
     .then((result) => {
       res.status(204).json(result);
@@ -104,15 +104,14 @@ app.delete("/api/persons/:id", (req, res, next) => {
     .catch((error) => next(error));
 });
 
-app.put("/api/persons/:id", (req, res, next) => {
-  const body = req.body;
+app.put('/api/persons/:id', (req, res, next) => {
+  const { name, number } = req.body;
 
-  const person = {
-    name: body.name,
-    number: body.number,
-  };
-
-  Person.findByIdAndUpdate(req.params.id, person, { new: true })
+  Person.findByIdAndUpdate(
+    req.params.id,
+    { name, number },
+    { new: true, runValidators: true, context: 'query' }
+  )
     .then((updatePerson) => {
       res.json(updatePerson);
     })
