@@ -1,10 +1,13 @@
 GET http://localhost:3001/api/notes
 
 ###
+GET http://localhost:3001/api/notes/67a0dbec9d13b532012396f7
+
+###
 POST http://localhost:3001/api/notes
 Content-Type: application/json
 
 {
-  "title": "Note 1",
-  "content": "Content of note 1"
+  "content": "Ensure that everuthing still works",
+  "important": true
 }

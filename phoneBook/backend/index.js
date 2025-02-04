@@ -1,6 +1,9 @@
+require("dotenv").config();
 const express = require("express");
 const morgan = require("morgan");
 const cors = require("cors");
+
+const Person = require("./models/person.js");
 const app = express();
 
 let persons = require("./data.js");
@@ -50,13 +53,33 @@ app.get("/info", (req, res) => {
 // ------------------------------------------------------------------
 
 app.get("/api/persons", (req, res) => {
-  res.json(persons);
+  Person.find({}).then((person) => {
+    res.json(person);
+  });
+});
+
+app.post("/api/persons", (req, res) => {
+  const body = req.body;
+
+  if (!(body && body.name && body.number))
+    return res.status(400).json({ error: "Falta datos..." });
+
+  const person = new Person({
+    name: body.name,
+    number: body.number,
+  });
+
+  person.save().then((savePerson) => {
+    res.json(savePerson);
+  });
 });
 
 app.get("/api/persons/:id", (req, res) => {
-  const id = Number(req.params.id);
-  const person = persons.filter((p) => p.id === id);
-  res.json(person);
+  const id = req.params.id;
+  console.log(id);
+  Person.findById(id).then((person) => {
+    res.json(person);
+  });
 });
 
 app.delete("/api/persons/:id", (req, res) => {
@@ -65,28 +88,6 @@ app.delete("/api/persons/:id", (req, res) => {
   console.log(id, persons);
 
   res.status(204).end();
-});
-
-const generateId = () => {
-  return Math.floor(Math.random() * 1000);
-};
-
-app.post("/api/persons", (req, res) => {
-  const body = req.body;
-
-  if (!(body && body.name && body.number))
-    return res.status(400).json({ error: "Falta datos..." });
-  if (persons.some((p) => p.name === body.name))
-    return res.status(400).json({ error: "Nombre ya registrado" });
-
-  const person = {
-    id: generateId(),
-    name: body.name,
-    number: body.number,
-  };
-  persons = persons.concat(person);
-
-  res.json(person);
 });
 
 // -------------- Inicio --------------

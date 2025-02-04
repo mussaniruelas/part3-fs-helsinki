@@ -1,10 +1,10 @@
-# fly.toml app configuration file generated for backend-sparkling-glitter-466 on 2025-02-03T08:51:02-04:00
+# fly.toml app configuration file generated for backend-winter-sunset-8497 on 2025-02-04T12:02:14-04:00
 #
 # See https://fly.io/docs/reference/configuration/ for information about how to use this file.
 #
 
-app = 'backend-sparkling-glitter-466'
-primary_region = 'scl'
+app = 'backend-winter-sunset-8497'
+primary_region = 'gru'
 
 [build]
 
